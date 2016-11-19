@@ -1,0 +1,242 @@
+#
+# trace01.txt - Properly terminate on EOF.
+#
+#
+# trace02.txt - Process builtin quit command.
+#
+#
+# trace03.txt - Run a foreground job.
+#
+tsh> quit
+#
+# trace04.txt - Run a background job.
+#
+tsh> ./myspin 1 &
+[1] (23627) ./myspin 1 &
+#
+# trace05.txt - Process jobs builtin command.
+#
+tsh> ./myspin 2 &
+[1] (23631) ./myspin 2 &
+tsh> ./myspin 3 &
+[2] (23633) ./myspin 3 &
+tsh> jobs
+[1] (23631) Running ./myspin 2 &
+[2] (23633) Running ./myspin 3 &
+#
+# trace06.txt - Forward SIGINT to foreground job.
+#
+tsh> ./myspin 4
+Job [1] (23638) terminated by signal 2
+#
+# trace07.txt - Forward SIGINT only to foreground job.
+#
+tsh> ./myspin 4 &
+[1] (23642) ./myspin 4 &
+tsh> ./myspin 5
+Job [2] (23644) terminated by signal 2
+tsh> jobs
+[1] (23642) Running ./myspin 4 &
+#
+# trace08.txt - Forward SIGTSTP only to foreground job.
+#
+tsh> ./myspin 4 &
+[1] (23649) ./myspin 4 &
+tsh> ./myspin 5
+Job [2] (23651) Stopped by signal 20
+tsh> jobs
+[1] (23649) Running ./myspin 4 &
+[2] (23651) Stopped ./myspin 5 
+#
+# trace09.txt - Process bg builtin command
+#
+tsh> ./myspin 4 &
+[1] (23656) ./myspin 4 &
+tsh> ./myspin 5
+Job [2] (23658) Stopped by signal 20
+tsh> jobs
+[1] (23656) Running ./myspin 4 &
+[2] (23658) Stopped ./myspin 5 
+tsh> bg %2
+[2] (23658) ./myspin 5 
+tsh> jobs
+[1] (23656) Running ./myspin 4 &
+[2] (23658) Running ./myspin 5 
+#
+# trace10.txt - Process fg builtin command. 
+#
+tsh> ./myspin 4 &
+[1] (23665) ./myspin 4 &
+tsh> fg %1
+Job [1] (23665) Stopped by signal 20
+tsh> jobs
+[1] (23665) Stopped ./myspin 4 &
+tsh> fg %1
+tsh> jobs
+#
+# trace11.txt - Forward SIGINT to every process in foreground process group
+#
+tsh> ./mysplit 4
+Job [1] (23673) terminated by signal 2
+tsh> /bin/ps a
+  PID TTY      STAT   TIME COMMAND
+  806 tty7     Ss+    0:27 /usr/lib/xorg/Xorg -core :0 -seat seat0 -auth /var/run/lightdm/root/:0 -nolisten tcp vt7 -novtswitch
+ 1347 tty1     Ss+    0:00 /sbin/agetty --noclear tty1 linux
+ 3458 pts/1    Ss+    0:00 bash
+20546 pts/6    Ss     0:00 bash
+22302 pts/7    Ss     0:00 bash
+22590 pts/6    S      0:00 ./tsh -p
+22592 pts/6    T      0:00 ./myspin 4
+22607 pts/6    S      0:00 ./tsh -p
+22609 pts/6    T      0:00 ./myspin 4
+22617 pts/6    S      0:00 ./tsh -p
+22619 pts/6    T      0:00 ./myspin 4
+22678 pts/6    S      8:04 ./tsh -p
+22680 pts/6    T      0:00 ./myspin 4
+23171 pts/7    Sl+    0:00 emacs tshref.out
+23670 pts/6    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace11.txt -s ./tsh -a -p
+23671 pts/6    S+     0:00 ./tsh -p
+23676 pts/6    R      0:00 /bin/ps a
+#
+# trace12.txt - Forward SIGTSTP to every process in foreground process group
+#
+tsh> ./mysplit 4
+Job [1] (23680) Stopped by signal 20
+tsh> jobs
+[1] (23680) Stopped ./mysplit 4 
+tsh> /bin/ps a
+  PID TTY      STAT   TIME COMMAND
+  806 tty7     Ss+    0:27 /usr/lib/xorg/Xorg -core :0 -seat seat0 -auth /var/run/lightdm/root/:0 -nolisten tcp vt7 -novtswitch
+ 1347 tty1     Ss+    0:00 /sbin/agetty --noclear tty1 linux
+ 3458 pts/1    Ss+    0:00 bash
+20546 pts/6    Ss     0:00 bash
+22302 pts/7    Ss     0:00 bash
+22590 pts/6    S      0:00 ./tsh -p
+22592 pts/6    T      0:00 ./myspin 4
+22607 pts/6    S      0:00 ./tsh -p
+22609 pts/6    T      0:00 ./myspin 4
+22617 pts/6    S      0:00 ./tsh -p
+22619 pts/6    T      0:00 ./myspin 4
+22678 pts/6    S      8:04 ./tsh -p
+22680 pts/6    T      0:00 ./myspin 4
+23171 pts/7    Sl+    0:00 emacs tshref.out
+23677 pts/6    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace12.txt -s ./tsh -a -p
+23678 pts/6    S+     0:00 ./tsh -p
+23680 pts/6    T      0:00 ./mysplit 4
+23681 pts/6    T      0:00 ./mysplit 4
+23684 pts/6    R      0:00 /bin/ps a
+#
+# trace13.txt - Restart every stopped process in process group
+#
+tsh> ./mysplit 4
+Job [1] (23688) Stopped by signal 20
+tsh> jobs
+[1] (23688) Stopped ./mysplit 4 
+tsh> /bin/ps a
+  PID TTY      STAT   TIME COMMAND
+  806 tty7     Ss+    0:27 /usr/lib/xorg/Xorg -core :0 -seat seat0 -auth /var/run/lightdm/root/:0 -nolisten tcp vt7 -novtswitch
+ 1347 tty1     Ss+    0:00 /sbin/agetty --noclear tty1 linux
+ 3458 pts/1    Ss+    0:00 bash
+20546 pts/6    Ss     0:00 bash
+22302 pts/7    Ss     0:00 bash
+22590 pts/6    S      0:00 ./tsh -p
+22592 pts/6    T      0:00 ./myspin 4
+22607 pts/6    S      0:00 ./tsh -p
+22609 pts/6    T      0:00 ./myspin 4
+22617 pts/6    S      0:00 ./tsh -p
+22619 pts/6    T      0:00 ./myspin 4
+22678 pts/6    S      8:04 ./tsh -p
+22680 pts/6    T      0:00 ./myspin 4
+23171 pts/7    Sl+    0:00 emacs tshref.out
+23685 pts/6    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace13.txt -s ./tsh -a -p
+23686 pts/6    S+     0:00 ./tsh -p
+23688 pts/6    T      0:00 ./mysplit 4
+23689 pts/6    T      0:00 ./mysplit 4
+23692 pts/6    R      0:00 /bin/ps a
+tsh> fg %1
+tsh> /bin/ps a
+  PID TTY      STAT   TIME COMMAND
+  806 tty7     Ss+    0:27 /usr/lib/xorg/Xorg -core :0 -seat seat0 -auth /var/run/lightdm/root/:0 -nolisten tcp vt7 -novtswitch
+ 1347 tty1     Ss+    0:00 /sbin/agetty --noclear tty1 linux
+ 3458 pts/1    Ss+    0:00 bash
+20546 pts/6    Ss     0:00 bash
+22302 pts/7    Ss     0:00 bash
+22590 pts/6    S      0:00 ./tsh -p
+22592 pts/6    T      0:00 ./myspin 4
+22607 pts/6    S      0:00 ./tsh -p
+22609 pts/6    T      0:00 ./myspin 4
+22617 pts/6    S      0:00 ./tsh -p
+22619 pts/6    T      0:00 ./myspin 4
+22678 pts/6    S      8:04 ./tsh -p
+22680 pts/6    T      0:00 ./myspin 4
+23171 pts/7    Sl+    0:00 emacs tshref.out
+23685 pts/6    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace13.txt -s ./tsh -a -p
+23686 pts/6    S+     0:00 ./tsh -p
+23695 pts/6    R      0:00 /bin/ps a
+#
+# trace14.txt - Simple error handling
+#
+tsh> ./bogus
+./bogus: Command not found
+tsh> ./myspin 4 &
+[1] (23701) ./myspin 4 &
+tsh> fg
+fg command requires PID or %jobid argument
+tsh> bg
+bg command requires PID or %jobid argument
+tsh> fg a
+argument must be a PID or %jobid
+tsh> bg a
+argument must be a PID or %jobid
+tsh> fg 9999999
+(9999999): No such process
+tsh> bg 9999999
+(9999999): No such process
+tsh> fg %2
+(2): No such job
+tsh> fg %1
+Job [1] (23701) Stopped by signal 20
+tsh> bg %2
+(2): No such job
+tsh> bg %1
+[1] (23701) ./myspin 4 &
+tsh> jobs
+[1] (23701) Running ./myspin 4 &
+#
+# trace15.txt - Putting it all together
+#
+tsh> ./bogus
+./bogus: Command not found
+tsh> ./myspin 10
+Job [1] (23718) terminated by signal 2
+tsh> ./myspin 3 &
+[1] (23720) ./myspin 3 &
+tsh> ./myspin 4 &
+[2] (23722) ./myspin 4 &
+tsh> jobs
+[1] (23720) Running ./myspin 3 &
+[2] (23722) Running ./myspin 4 &
+tsh> fg %1
+Job [1] (23720) Stopped by signal 20
+tsh> jobs
+[1] (23720) Stopped ./myspin 3 &
+[2] (23722) Running ./myspin 4 &
+tsh> bg %3
+(3): No such job
+tsh> bg %1
+[1] (23720) ./myspin 3 &
+tsh> jobs
+[1] (23720) Running ./myspin 3 &
+[2] (23722) Running ./myspin 4 &
+tsh> fg %1
+tsh> quit
+#
+# trace16.txt - Tests whether the shell can handle SIGTSTP and SIGINT
+#     signals that come from other processes instead of the terminal.
+#
+tsh> ./mystop 2
+Job [1] (23734) Stopped by signal 20
+tsh> jobs
+[1] (23734) Stopped ./mystop 2
+tsh> ./myint 2
+Job [2] (23738) terminated by signal 2
